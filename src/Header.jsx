@@ -12,7 +12,7 @@ const useStyles = makeStyles(()=>({
 
 const Header = ({userData}) => {
     const classes = useStyles();
-    const {ip, location:{city},location:{lat}, location:{lng} } = userData;
+    const {ip, city, lat, lng } = userData;
     
     return (
         <AppBar position="static" >

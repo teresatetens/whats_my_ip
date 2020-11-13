@@ -1,0 +1,79 @@
+import React, { useState, useEffect} from 'react';
+import axios from 'axios';
+import './App.css';
+import { Grid } from "@material-ui/core";
+import Header from './Header';
+import MapView from './MapView';
+import CountryView from './CountryView';
+import Content from './Content';
+import {DateTime} from 'luxon';
+
+const App = () => {
+  const myIpUrl = 'https://geo.ipify.org/api/v1?apiKey=at_zWWkYf0iupaITlxj6wnkkUtme0WyQ'
+  const myTime = DateTime.local();
+  const [userData, setUserData] = useState(null);  
+  console.log({userData: userData})
+
+  useEffect(() => {
+    const ipData = axios.get(myIpUrl);
+
+    const countryData = ipData.then((thisResult)=>
+      axios.get(`https://restcountries.eu/rest/v2/alpha/${thisResult.data.location.country}`)
+    )
+    console.log(ipData)
+    console.log(countryData)
+    return Promise.all([ipData, countryData]).then(([ip, country]) => {
+        setUserData({
+          ip: ip.data.ip,
+          lat: ip.data.location.lat,
+          lng: ip.data.location.lng,
+          city: ip.data.location.city,
+          flag: country.data.flag,
+          countryCode: country.data.altSpellings[0],
+          officialName: country.data.altSpellings[1],
+          originalName: country.data.altSpellings[2],
+          language: country.data.languages[0].name,
+          capital: country.data.capital,
+          isLoaded: true
+        });
+      })
+  },[])
+
+
+
+  return (
+    <>
+      <Grid container direction = "column">
+          <Grid item>
+                  {userData &&
+                  <Header userData = {userData}/>
+                  }
+          </Grid>
+          <Grid item>
+              <Grid item xs = {false} sm = {2}/>
+              <Grid item xs = {12} sm = {6}>
+                  {userData &&
+                  <Content userData = {userData}/>
+                  }
+              </Grid>
+              <Grid item xs = {false} sm = {2}/>
+          </Grid>
+      </Grid> 
+      <div className = "myMap">
+            {userData &&
+            <>
+                <MapView userData = {userData}/>
+            </>
+            }
+      </div> 
+      <div className = "myCountry">
+            {userData &&
+            <>
+                <CountryView userData = {userData}/>
+            </>
+            }
+      </div> 
+    </>
+  ); 
+}
+export default App;
