@@ -1,20 +1,19 @@
 import React, { useState, useEffect} from 'react';
 import axios from 'axios';
 import './App.css';
-
-import {DateTime} from 'luxon';
-import Grid from '@material-ui/core/Grid';
+//Map related
+import 'leaflet/dist/leaflet.css';
 import { TileLayer, MapContainer } from 'react-leaflet';
+import Leaflet from 'leaflet';
+//Time 
+import {DateTime} from 'luxon';
+//Style with Material UI
+import { makeStyles } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import ButtonBase from '@material-ui/core/ButtonBase';
-import Leaflet from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { makeStyles } from '@material-ui/core/styles';
-import Header from './Header';
-import MapView from './MapView';
-import CountryView from './CountryView';
-import Content from './Content';
+require('dotenv').config()
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -39,14 +38,11 @@ const useStyles = makeStyles((theme) => ({
 
 const App = () => {
   const classes = useStyles();
-  const myIpUrl = 'https://geo.ipify.org/api/v1?apiKey=at_zWWkYf0iupaITlxj6wnkkUtme0WyQ'
-  const myTime = DateTime.local();
+  const apiKey = process.env.REACT_APP_IPIFY_API_KEY
+  const myIpUrl = `https://geo.ipify.org/api/v1?apiKey=${apiKey}`
+  
   const [userData, setUserData] = useState();  
   console.log({userData: userData})
-
-  const {ip, lat, lng, city, flag, countryCode, officialName, language, originalName, capital} = userData;
-  const position = [lat, lng]
-
 
   useEffect(() => {
     const ipData = axios.get(myIpUrl);    
@@ -74,106 +70,55 @@ const App = () => {
 
   return (
   <>
-    <Grid
-        container
-        direction="row"
-        justify="center"
-        alignItems="center"
-        style={{ height: "100vh" }}
-      >
-        <MapContainer center={userData && position} zoom={13} scrollWheelZoom={false}>
-          <TileLayer
-            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-        </MapContainer>
-    </Grid>
-      {/* <Grid container direction = "column">
-          <Grid item>
-                  {userData && // userData.isLoaded && does not work
-                  <Header userData = {userData}/>
-                  }
+  {userData && (
+    <div className={classes.root}>
+      <Paper className={classes.paper} elevation = {3}>   
+        <Grid container style={{paddingBottom:10}} >    
+            <MapContainer center={[userData.lat, userData.lng]} zoom={13} scrollWheelZoom={false}>
+                <TileLayer
+                attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+            </MapContainer>
           </Grid>
-          <Grid item>
-              <Grid item xs = {false} sm = {2}/>
-              <Grid item xs = {12} sm = {6}>
-                  {userData &&
-                  <Content userData = {userData}/>
-                  }
-              </Grid>
-              <Grid item xs = {false} sm = {2}/>
-          </Grid>
-      </Grid> 
-      <div className = "myMap">
-            {userData &&
-            <>
-                <MapView userData = {userData}/>
-            </>
-            }
-      </div> 
-      <div className = "myCountry">
-            {userData &&
-            <>
-                <CountryView userData = {userData}/>
-            </>
-            }
-      </div>  */}
-  
-    {/* <div className={classes.root}>
-      <Paper className={classes.paper}>
-      { userData &&   
-        <MapContainer center={position} zoom={13} scrollWheelZoom={false}>
-            <TileLayer
-            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-        </MapContainer>
-      }
-        <Grid container spacing={2}>
-          <Grid item>
-          { userData &&  
-            <ButtonBase className={classes.image}>
-              <img className={classes.img} alt="complex" src={flag} />
-            </ButtonBase>
-          }
-          </Grid>
-          <Grid item xs={12} sm container>
-            <Grid item xs container direction="column" spacing={2}>
-              <Grid item xs>
-              { userData &&  
-              <>
-                <Typography gutterBottom variant="subtitle1">
-                    Your IP Address is: {ip}             
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                    You live in {city}, {officialName}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                    In {language}, {originalName}
-                </Typography>
-                </>
-              }
+          <Grid container spacing={2}>
+            <Grid item>
+              <ButtonBase className={classes.image}>
+                <img className={classes.img} alt="complex" src={userData.flag} />
+              </ButtonBase>          
+            </Grid>
+            <Grid item xs={12} sm container>
+              <Grid item xs container direction="column" spacing={2}>
+                <Grid item xs>
+                  <Typography gutterBottom variant="subtitle1">
+                      Your IP Address is: {userData.ip}             
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" >
+                      You live in {userData.city}, {userData.officialName}.
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                      In {userData.language}, it is called: '{userData.originalName}'.
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                      Now is {DateTime.local().toLocaleString()}, {DateTime.local().toLocaleString(DateTime.TIME_SIMPLE)}.
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography variant="body2" color="textSecondary" style={{ cursor: 'pointer' }}>
+                      Your Coordinates: {userData.lat}, {userData.lng}
+                  </Typography>                
+                </Grid>
               </Grid>
               <Grid item>
-              { userData && 
-                <Typography variant="body2" style={{ cursor: 'pointer' }}>
-                    Your Coordinates: {lat}, {lng}
-                </Typography>                
-              }
+                <Typography variant="subtitle1">
+                    {userData.countryCode}
+                </Typography>              
               </Grid>
             </Grid>
-            <Grid item>
-            { userData && 
-              <Typography variant="subtitle1">
-                  {countryCode}
-              </Typography>              
-              }
-            </Grid>
           </Grid>
-        </Grid>
       </Paper>
     </div> 
-  }  */}
+    )}  
   </>
   ); 
 }
